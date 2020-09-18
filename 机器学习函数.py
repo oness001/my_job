@@ -173,7 +173,6 @@ def polynomial_Logistic_classify0(X_train=pd.DataFrame(),y_train=pd.DataFrame(),
 
     return pipeline_model,X_train
 
-
 def polynomial_Logistic_classify1(X_train=[],yinzi=[],y_train=[], degree=1,**kwarg):
 
 
@@ -195,8 +194,6 @@ def polynomial_Logistic_classify1(X_train=[],yinzi=[],y_train=[], degree=1,**kwa
 
     return pipeline_model,X_train ,train_score
 
-
-
 def polynomial_regression0(X_train=[],yinzi=[],y_train=[], degree=1, include_bias=False, normalize =False):
     # 构建多项式特征
     polynomial_features = PolynomialFeatures(degree=degree,include_bias=include_bias)
@@ -215,7 +212,6 @@ def polynomial_regression0(X_train=[],yinzi=[],y_train=[], degree=1, include_bia
     # X_train.loc[X_train.index,'预测值'] = pre #pd.Series(pre,index=X_train.index)
 
     return pipeline_model,X_train ,train_score
-
 
 def svc_classify0(X_train=pd.DataFrame(),yinzi = [],y_train=pd.DataFrame(),kernel = 'poly',degree=2,c=0.8):
     from sklearn.svm import SVC
@@ -245,7 +241,6 @@ def svc_classify0(X_train=pd.DataFrame(),yinzi = [],y_train=pd.DataFrame(),kerne
     X_train.loc[:,'预测值'] = pd.Series(pre,index=X_train.index)
 
     return svc,X_train,train_score
-
 
 def randomforest_classify0(X_train=pd.DataFrame(),yinzi=[],y_train=pd.DataFrame(),**kwarg):
     from sklearn.ensemble import RandomForestClassifier
@@ -278,7 +273,6 @@ def randomforest_classify0(X_train=pd.DataFrame(),yinzi=[],y_train=pd.DataFrame(
 
     return rfcl,X_train,scores['test_score'].mean()
 
-
 def poly_ridge_regression(X_train=[], yinzi=[], y_train=[], degree=1, **kwarg):
     from sklearn.model_selection import cross_validate
     from sklearn.preprocessing import PolynomialFeatures
@@ -301,7 +295,6 @@ def poly_ridge_regression(X_train=[], yinzi=[], y_train=[], degree=1, **kwarg):
 
     X_train['预测值'] = pre
     return pipeline_model, X_train, scores["test_score"].mean()
-
 
 def lars_regression(X_train=[],yinzi=[],y_train=[], degree=1):
     from sklearn.preprocessing import PolynomialFeatures
@@ -329,7 +322,6 @@ def lars_regression(X_train=[],yinzi=[],y_train=[], degree=1):
     # X_train.loc[X_train.index,'预测值'] = pre #pd.Series(pre,index=X_train.index)
 
     return pipeline_model,X_train ,scores["test_score"].mean()
-
 
 def extraforest_classify0(X_train=pd.DataFrame(),yinzi=[],y_train=pd.DataFrame(),**kwarg):
     from sklearn.ensemble import ExtraTreesClassifier
@@ -396,7 +388,6 @@ def polynomial_regression_grid(X_train=[],yinzi=[],y_train=[],n_iter=3, n_jobs=2
     X_train['预测值'] = pre
     return poly_rg_best, X_train, poly_rg_grid.best_score_
 
-
 def ada_dt_regression_grid(X_train=[],yinzi=[],y_train=[], n_jobs=2):
     from sklearn.tree import DecisionTreeRegressor
     from sklearn.ensemble import AdaBoostRegressor
@@ -418,69 +409,6 @@ def ada_dt_regression_grid(X_train=[],yinzi=[],y_train=[], n_jobs=2):
     X_train['预测值'] = pre
 
     return regr_best,X_train ,grid.best_score_
-
-def svc_classify_grid(X_train=pd.DataFrame(), yinzi=[], y_train=pd.DataFrame(),n_iter=5,kernel=["rbf",'sigmoid','poly'],n_jobs=2):
-    from sklearn.svm import SVC
-    from sklearn.model_selection import GridSearchCV,RandomizedSearchCV
-
-    param_grid =  {"kernel": kernel,
-                "C": [x/110 for x in range(1,1000,13)]+[x/10 for x in range(10,150,13)],
-               "gamma": [x/1080 for x in range(1,1300,93)]+[x/7 for x in range(10,200,13)],
-               "degree": [3],"coef0": [0.618,0.312,0.2,0.8,0.5,0.1,0.9,0.25,0.75]}
-
-    grid = RandomizedSearchCV(SVC(), param_grid,n_iter=n_iter, cv=5,n_jobs=n_jobs)
-    grid.fit(X_train[yinzi], y_train)
-    print('svc，随机遍历最优超参数:', grid.best_score_)
-
-    clf_best = grid.best_estimator_
-
-    pre = clf_best.predict(X_train[yinzi])
-    X_train = pd.DataFrame(X_train)
-    X_train.loc[:, '预测值'] = pd.Series(pre, index=X_train.index)
-
-    return clf_best, X_train, grid.best_score_
-
-def randomforest_classify_grid(X_train=pd.DataFrame(),yinzi=[],y_train=pd.DataFrame(),n_iter=5,n_jobs=2):
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.model_selection import GridSearchCV,RandomizedSearchCV
-
-    param_grid={'n_estimators' : [100,120,140,150,200], 'criterion' : ['gini'], 'max_depth' : [5,6,7],
-    'max_features' : ['log2','sqrt'] ,'min_samples_split' : [3]}
-
-    rfcl_grid = RandomizedSearchCV(RandomForestClassifier(), param_grid,n_iter=n_iter, cv=5,n_jobs=n_jobs)
-    rfcl_grid.fit(X_train[yinzi], y_train)
-    print(f"random_forest，随机遍历最优得分：{rfcl_grid.best_score_}")
-    rfcl_best = rfcl_grid.best_estimator_
-
-    pre = rfcl_best.predict(X_train[yinzi])
-    X_train = pd.DataFrame(X_train)
-    X_train.loc[:,'预测值'] = pd.Series(pre,index=X_train.index)
-
-
-    return rfcl_best,X_train,rfcl_grid.best_score_
-
-def adaboosting_dtree_grid(X_train=pd.DataFrame(),yinzi=[],y_train=pd.DataFrame(),n_iter=5,n_jobs=2):
-    from sklearn.ensemble import AdaBoostClassifier
-    from sklearn.tree import DecisionTreeClassifier
-    from sklearn.model_selection import  RandomizedSearchCV
-    b_estimator_list = []
-    for n in range(3, 7, 1):
-        b_estimator_list.append(DecisionTreeClassifier(criterion='gini', splitter='best', max_depth=n))
-    if len(b_estimator_list) == 0:
-        raise
-
-    param_grid = {'base_estimator': b_estimator_list,
-                  'n_estimators': [ 70, 80,100,120,140,150]}
-    adadtcl_grid = RandomizedSearchCV(AdaBoostClassifier(), param_grid, n_iter=n_iter, cv=5, n_jobs=n_jobs)
-    adadtcl_grid.fit(X_train[yinzi], y_train)
-    print(f"adaboost_d_tree，随机遍历最优得分：{adadtcl_grid.best_score_}")
-    adadtcl_best = adadtcl_grid.best_estimator_
-
-    pre = adadtcl_best.predict(X_train[yinzi])
-    X_train = pd.DataFrame(X_train)
-    X_train.loc[:,'预测值'] = pd.Series(pre,index=X_train.index)
-
-    return adadtcl_best,X_train,adadtcl_grid.best_score_
 
 def bag_svc(X_train=pd.DataFrame(),yinzi=[],y_train=pd.DataFrame(),n_iter=5,n_jobs=2):
     from sklearn.svm import SVC
@@ -515,3 +443,155 @@ def k_pac(X_train=pd.DataFrame(),yinzi=[],N=10,kernel=5,n_jobs=2):
     transformer = KernelPCA(n_components=10, kernel='rbf', n_jobs=1)
     X_transformed = transformer.fit_transform(X_train[yinzi])
 
+
+
+#==最新
+def randomforest_classify_grid(X_train=pd.DataFrame(),yinzi=[],y_train=pd.DataFrame(),n_iter=5,n_jobs=2):
+    from sklearn.ensemble import RandomForestClassifier
+    from sklearn.model_selection import RandomizedSearchCV
+    from sklearn.metrics import accuracy_score, balanced_accuracy_score
+    res_col = str(y_train.name)
+
+    param_grid={'n_estimators' : [120,140,150,200], 'criterion' : ['gini'], 'max_depth' : [5,6,7,8],
+    'max_features' : ['log2','sqrt'] ,'min_samples_split' : [3]}
+
+    grid = RandomizedSearchCV(RandomForestClassifier(), param_grid,n_iter=n_iter, cv=5,n_jobs=n_jobs)
+    grid.fit(X_train[yinzi], y_train)
+    best_grid = grid.best_estimator_
+
+    pre = best_grid.predict(X_train[yinzi])
+    X_train = pd.DataFrame(X_train)
+    X_train.loc[:,'预测值'] = pd.Series(pre,index=X_train.index)
+
+    new = X_train[['预测值', res_col]].sample(int((X_train.shape[0]) * 0.618))
+
+    sj_acc_score = accuracy_score(new[res_col], new['预测值'])
+    sj_ba_score = balanced_accuracy_score(new[res_col], new['预测值'])
+
+    print(f"random_forest，随机遍历最优得分：{[grid.best_score_,sj_acc_score,sj_ba_score]}")
+    return best_grid,X_train,[grid.best_score_,sj_acc_score,sj_ba_score]
+
+def adaboosting_dtree_grid(X_train=pd.DataFrame(),yinzi=[],y_train=pd.DataFrame(),n_iter=5,n_jobs=2):
+    from sklearn.ensemble import AdaBoostClassifier
+    from sklearn.tree import DecisionTreeClassifier
+    from sklearn.model_selection import RandomizedSearchCV
+    from sklearn.metrics import accuracy_score, balanced_accuracy_score
+    res_col = str(y_train.name)
+
+    b_estimator_list = []
+    for n in range(3, 7, 1):
+        b_estimator_list.append(DecisionTreeClassifier(criterion='gini', splitter='best', max_depth=n))
+    if len(b_estimator_list) == 0:
+        raise
+    param_grid = {'base_estimator': b_estimator_list,
+                  'n_estimators': [80, 100,120,150,180]}
+    adadtcl_grid = RandomizedSearchCV(AdaBoostClassifier(), param_grid, n_iter=n_iter, cv=6, n_jobs=n_jobs)
+    adadtcl_grid.fit(X_train[yinzi], y_train)
+    adadtcl_best = adadtcl_grid.best_estimator_
+
+    pre = adadtcl_best.predict(X_train[yinzi])
+    X_train = pd.DataFrame(X_train)
+    X_train.loc[:,'预测值'] = pd.Series(pre,index=X_train.index)
+
+    new  = X_train[['预测值',res_col]].sample(int((X_train.shape[0])*0.618))
+    sj_acc_score = accuracy_score(new[res_col], new['预测值'])
+    sj_ba_score = balanced_accuracy_score(new[res_col], new['预测值'])
+
+    print(f"adaboost_d_tree，随机遍历最优得分：{[adadtcl_grid.best_score_,sj_acc_score,sj_ba_score]}")
+    return adadtcl_best,X_train,[adadtcl_grid.best_score_,sj_acc_score,sj_ba_score]
+
+def svc_classify_grid(X_train=pd.DataFrame(), yinzi=[], y_train=pd.DataFrame(),n_iter=5,n_jobs=2):
+    from sklearn.svm import SVC
+    from sklearn.model_selection import RandomizedSearchCV
+    from sklearn.metrics import accuracy_score, balanced_accuracy_score
+    res_col = str(y_train.name)
+    # print(y_train.name)
+    kernel = ["rbf", 'sigmoid',] #'poly'
+    param_grid =  {"kernel": kernel,
+                "C": [x/110 for x in range(1,1000,13)]+[x/10 for x in range(10,150,13)],
+               "gamma": [x/1080 for x in range(1,1300,93)]+[x/7 for x in range(10,200,13)],
+               "degree": [3],"coef0": [0.618,0.312,0.2,0.8,0.5,0.1,0.9,0.25,0.75]}
+    grid = RandomizedSearchCV(SVC(), param_grid,n_iter=n_iter, cv=6,n_jobs=n_jobs)
+    grid.fit(X_train[yinzi], y_train)
+
+    clf_best = grid.best_estimator_
+
+    pre = clf_best.predict(X_train[yinzi])
+    X_train = pd.DataFrame(X_train)
+    X_train.loc[:, '预测值'] = pd.Series(pre, index=X_train.index)
+
+    new  = X_train[['预测值',res_col]].sample(int((X_train.shape[0])*0.618))
+    sj_acc_score = accuracy_score(new[res_col], new['预测值'])
+    sj_ba_score = balanced_accuracy_score(new[res_col], new['预测值'])
+
+    print('svc，随机遍历最优超参数:', [grid.best_score_,sj_acc_score,sj_ba_score])
+    return clf_best, X_train, [grid.best_score_,sj_acc_score,sj_ba_score]
+
+def bag_svc_grid(X_train=pd.DataFrame(),yinzi=[],y_train=pd.DataFrame(),n_iter=5,n_jobs=2):
+    from sklearn.svm import SVC
+    from sklearn.ensemble import BaggingClassifier
+    from sklearn.model_selection import RandomizedSearchCV
+    from sklearn.metrics import accuracy_score, balanced_accuracy_score
+    res_col = str(y_train.name)
+    # clfb = BaggingClassifier(base_estimator=SVC(),n_estimators=n_iter,max_samples=0.6,max_features=0.4,bootstrap=True,
+    #                     bootstrap_features=True, random_state=0)
+
+    param_grid = {"n_estimators": [x  for x in range(50, 110, 10)],
+                  "base_estimator": [SVC(gamma=x) for x in [x/1080 for x in range(1,1300,93)]+[x/7 for x in range(10,200,13)]+['auto_deprecated']],
+                  "max_samples": [x / 10 for x in range(5,8)] ,
+                  "max_features": [x / 10 for x in range(3,7)] ,}
+    grid = RandomizedSearchCV(BaggingClassifier(SVC()), param_grid, n_iter=n_iter, cv =5, n_jobs=n_jobs)
+    grid.fit(X_train[yinzi], y_train)
+
+    clf_best = grid.best_estimator_
+
+    # clfb = clf_best.fit(X_train[yinzi], y_train)
+    pre = clf_best.predict(X_train[yinzi])
+    X_train = pd.DataFrame(X_train)
+    X_train.loc[:,'预测值'] = pd.Series(pre,index=X_train.index)
+
+    new = X_train[['预测值', res_col]].sample(int((X_train.shape[0]) * 0.618))
+    sj_acc_score = accuracy_score(new[res_col], new['预测值'])
+    sj_ba_score = balanced_accuracy_score(new[res_col], new['预测值'])
+
+    print('bag_svc，随机遍历最优超参数:', [grid.best_score_,sj_acc_score,sj_ba_score])
+    return clf_best,X_train,[grid.best_score_,sj_acc_score,sj_ba_score]
+
+def polynomial_Logistic_classify_grid(X_train=[],yinzi=[],y_train=[], n_iter=10,n_jobs=2):
+    from sklearn.preprocessing import PolynomialFeatures
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.ensemble import BaggingClassifier
+    from sklearn.metrics import accuracy_score, balanced_accuracy_score
+
+
+    # 构建多项式特征
+    polynomial_features = PolynomialFeatures(degree=3,include_bias=False)
+    Logistic_Regression = LogisticRegression()
+    # 添加队列
+    pipeline_model = Pipeline([("polynomial_features", polynomial_features),
+                         ("Logistic_Regression", Logistic_Regression)])
+    baglogi = BaggingClassifier(base_estimator = pipeline_model(),
+                      n_estimators = n_iter,
+                      max_samples=0.7,
+                      max_features=0.7,
+                      bootstrap=True,
+                      bootstrap_features=True,
+                      n_jobs=n_jobs,
+                      )
+    baglogi = baglogi.fit(X_train[yinzi], y_train)
+
+    score0 = baglogi.score(X_train[yinzi], y_train)
+
+    pre = baglogi.predict(X_train[yinzi])
+    X_train = pd.DataFrame(X_train)
+    X_train.loc[:, '预测值'] = pd.Series(pre, index=X_train.index)
+
+    new = X_train[['预测值', '预测周期真实分类']].sample(int((X_train.shape[0]) * 0.618))
+    sj_acc_score = accuracy_score(new['预测周期真实分类'], new['预测值'])
+    sj_ba_score = balanced_accuracy_score(new['预测周期真实分类'], new['预测值'])
+
+
+    print('bag_logi，随机遍历最优超参数:', [score0, sj_acc_score, sj_ba_score])
+
+
+    return pipeline_model,X_train ,[score0, sj_acc_score, sj_ba_score]

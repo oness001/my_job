@@ -578,6 +578,8 @@ def train_and_predict3(train_data,res_path,algo,res_flag= '.pickle' ,zong_t = []
     '''
     # 导入训练集
     df_yinzi = train_data.copy()
+    print(df_yinzi.keys())
+    # exit()
 
     i = 0
     df_zong = {}  # 收集每一阶段的优势参数
@@ -588,16 +590,20 @@ def train_and_predict3(train_data,res_path,algo,res_flag= '.pickle' ,zong_t = []
         now_ = now_t0.strftime(format="%Y-%m-%d")
         # 训练结束时间
         train_t0 = now_t0 - relativedelta(months=int(gd_zq))
+        train_t0_ = train_t0.strftime(format="%Y-%m-%d")
+
         # 预测结束时间，预测结果月
         pre_t0 = now_t0 + relativedelta(months=int(gd_zq))
         pre_ = pre_t0.strftime(format="%Y-%m-%d")
         print('----------')
+        print(train_t0_,'====>',now_, '=====>', pre_)
+
         # 训练数据结果月>回测结束时间，意味着，没有预测数据。跳出。
         if now_t0 > zong_t[-1]:
             print(f'训练数据结束，{train_t0}')
             break
-        else:
-            print( now_,'=====>', pre_)
+        # exit()
+            # print( now_,'=====>', pre_)
 
         df_zong[now_t0] = {}
         # 训练数据
@@ -605,36 +611,37 @@ def train_and_predict3(train_data,res_path,algo,res_flag= '.pickle' ,zong_t = []
 
         # 预测数据
         pre_da0 =  pd.DataFrame(df_yinzi[pre_].copy())
-        pre_da0 = pre_da0[pre_da0['res_t'] == pre_].copy()
+        pre_da0 = pre_da0[pre_da0['res_time'] == pre_].copy()
 
 
         train_da0['canshu_index'] =train_da0['canshu']
         pre_da0['canshu_index'] =pre_da0['canshu']
 
+        # 添加因子
+        train_da0 = clm_tezheng(train_da0)
+        pre_da0 = clm_tezheng(pre_da0)
+
+        # print(pre_da0.head(5))
+
         train_da0.set_index('canshu_index', drop=True, inplace=True)
         pre_da0.set_index('canshu_index', drop=True, inplace=True)
-        yinzi = ['本周期总收益',
-                  '最近周期收益', '最大回撤', '最大值', '收益std', '偏度', '峰度', '平均月收益', '平均月最大收益',
-                  '平均月最大回撤', '平均月夏普率', '平均月交易次数', '月均交易天数', '月均盈利天数', '月均开单收益std',
-                  '月均开单最大收益', '月均亏单平均亏损', '月均胜单平均盈利', '月均胜单平均盈利偏度', '月均胜单平均盈利std',
-                  '月均交易胜率', '月均交易胜率偏度', '月均交易胜率std', '月均开单平均收益', '月均开单平均收益偏度',
-                  '月均开单平均收益std', '回撤std', '盈撤比', '盈利因子01']
-        # 因子重构
-        train_da0,new_yinzi = build_yinzi(train_data=train_da0, yinzi=yinzi,res_index = '预测周期真实收益')
-        train_da0,yinzi0 = corr_jw(train_data=train_da0,n=20, yinzi=new_yinzi, res_index='预测周期真实收益')
-        yinzi = ['本周期总收益',
-                  '最近周期收益', '最大回撤', '最大值', '收益std', '偏度', '峰度', '平均月收益', '平均月最大收益',
-                  '平均月最大回撤', '平均月夏普率', '平均月交易次数', '月均交易天数', '月均盈利天数', '月均开单收益std',
-                  '月均开单最大收益', '月均亏单平均亏损', '月均胜单平均盈利', '月均胜单平均盈利偏度', '月均胜单平均盈利std',
-                  '月均交易胜率', '月均交易胜率偏度', '月均交易胜率std', '月均开单平均收益', '月均开单平均收益偏度',
-                  '月均开单平均收益std', '回撤std', '盈撤比', '盈利因子01']
-        pre_da0, new_yinzi = build_yinzi(train_data=pre_da0, yinzi=yinzi, res_index='预测周期真实收益')
-
-        pre_da0, yinzi0 = corr_jw(train_data=pre_da0, n=20,yinzi=new_yinzi, res_index='预测周期真实收益')
-
+        flag_ = ['celuename', 'canshu', 'celue_name', 's_time', 'e_time', 'res_time','预测周期真实收益','canshu_index']
+        yinzi = [i for i in list(train_da0.keys()) if i not in flag_]
+        # print(yinzi)
         # exit()
-        yinzi0 = yinzi0
+
+        # # 因子重构
+        # train_da0,new_yinzi = build_yinzi(train_data=train_da0, yinzi=yinzi,res_index = '预测周期真实收益')
+        # train_da0,yinzi0 = corr_jw(train_data=train_da0,n=20, yinzi=yinzi, res_index='预测周期真实收益')
+
+        # pre_da0, new_yinzi = build_yinzi(train_data=pre_da0, yinzi=yinzi, res_index='预测周期真实收益')
+        # pre_da0, yinzi0 = corr_jw(train_data=pre_da0, n=20,yinzi=new_yinzi, res_index='预测周期真实收益')
+        # exit()
+
+        yinzi0 = yinzi
         print(f'本次执行的因子数：{len(yinzi0)}')
+        print(f'本次执行的因子数：{(yinzi0)}')
+
         # exit()
 
         # print(train_da0.tail())
@@ -647,7 +654,6 @@ def train_and_predict3(train_data,res_path,algo,res_flag= '.pickle' ,zong_t = []
             print(now_t0, '开始训练。。。')
 
 
-            res0 = ['预测周期真实收益', '预期偏差', 'end_预测值']
             # 训练
             model, df_pre0 = eval(algo)(train_data=train_da0, model_list={}, yinzi=yinzi0,Train=True,n_jobs=n_jobs)
             if isinstance(df_pre0, str):
@@ -664,7 +670,6 @@ def train_and_predict3(train_data,res_path,algo,res_flag= '.pickle' ,zong_t = []
             # 预测， 最后一个月，只给出预测数据，
             if pre_t0 > zong_t[-1]: #预测数据的真实值大于目前数据，代表没有未来数据，仅需要预测。
                 print('最后一个月！')
-
                 model_list, pre_data = eval(algo)(train_data=pre_da0, model_list=model, yinzi=yinzi0, Train=False,last=True)
                 if isinstance(pre_data, str):
                     print(f'{pre_data}，最后一个月，无预测数据。')
@@ -718,11 +723,151 @@ def train_and_predict3(train_data,res_path,algo,res_flag= '.pickle' ,zong_t = []
 
     return res_path
 
+# 匹配911，二级全预测
+def train_and_predict4(train_data,res_path,algo,res_flag= '.pickle' ,zong_t = [], hc_zq=6, gd_zq=1,n_jobs=2,q_n=10):
+    '''02
+    动态处理每次训练的因子，进行动态选择。
+    基本流程：
+    1.在每次日期循环时,生成两个数据集，训练数据和测试数据（预测数据）。
+    2.对两个数据进行必要的加工。
+    3.对每次的训练数据进行，因子重构：这个重构意味：每次因子都不同。选择标准一致。
+
+    '''
+    # 导入训练集
+    df_yinzi = train_data.copy()
+    print(df_yinzi.keys())
+    # exit()
+
+    i = 0
+    df_zong = {}  # 收集每一阶段的优势参数
+    while True:
+        # 当前的回测的时间=训练结果月
+        now_t0 = zong_t[0] + relativedelta(months=int(i + hc_zq))
+        now_ = now_t0.strftime(format="%Y-%m-%d")
+        # 训练结束时间
+        train_t0 = now_t0 - relativedelta(months=int(gd_zq))
+        train_t0_ = train_t0.strftime(format="%Y-%m-%d")
+
+        # 预测结束时间，预测结果月
+        pre_t0 = now_t0 + relativedelta(months=int(gd_zq))
+        pre_ = pre_t0.strftime(format="%Y-%m-%d")
+        pre_pre = ( pre_t0 + relativedelta(months=int(1))).strftime(format="%Y-%m-%d")
+
+        print('----------')
+        print(train_t0_,'====>',now_, '=====>', pre_)
+
+
+        # 训练数据结果月>回测结束时间，意味着，没有预测数据。跳出。
+        if now_t0 > zong_t[-1]:
+            print(f'训练数据结束，{train_t0}')
+            break
+
+        df_zong[now_t0] = {}
+        # 训练数据
+        train_da0 =  pd.DataFrame(df_yinzi[now_].copy())
+        # 预测数据
+        pre_da0 =  pd.DataFrame(df_yinzi[pre_].copy())
+        pre_da0 = pre_da0[pre_da0['res_time'] == pre_].copy()
+        train_da0['canshu_index'] =train_da0['canshu']
+        pre_da0['canshu_index'] =pre_da0['canshu']
+        # 添加策略名因子
+        train_da0 = clm_tezheng(train_da0)
+        pre_da0 = clm_tezheng(pre_da0)
+        train_da0.set_index('canshu_index', drop=True, inplace=True)
+        pre_da0.set_index('canshu_index', drop=True, inplace=True)
+        flag_ = ['celuename', 'canshu', 'celue_name', 's_time', 'e_time', 'res_time','预测周期真实收益','canshu_index']
+        yinzi = [i for i in list(train_da0.keys()) if i not in flag_]
+        # print(yinzi)
+        # exit()
+
+        # # 因子重构
+        # train_da0,new_yinzi = build_yinzi(train_data=train_da0, yinzi=yinzi,res_index = '预测周期真实收益')
+        # train_da0,yinzi0 = corr_jw(train_data=train_da0,n=20, yinzi=yinzi, res_index='预测周期真实收益')
+
+        # pre_da0, new_yinzi = build_yinzi(train_data=pre_da0, yinzi=yinzi, res_index='预测周期真实收益')
+        # pre_da0, yinzi0 = corr_jw(train_data=pre_da0, n=20,yinzi=new_yinzi, res_index='预测周期真实收益')
+        # exit()
+        yinzi0 = yinzi
+        print(f'本次执行的因子数：{len(yinzi0)}')
+        print(f'本次执行的因子数：{(yinzi0)}')
+        # exit()
+
+
+        # 机器学习预测
+        try:
+            print(now_t0, '开始训练。。。')
+            # 训练
+            res_to_df, suanfa_list = eval(algo)(train_data=train_da0, res_to_df={}, yinzi=yinzi0,Train=True,n_jobs=n_jobs,pac_k = 40,q=q_n)
+
+            # 预测， 最后一个月，只给出预测数据，
+            print(pre_t0, '开始预测。。。')
+            if pre_t0 > zong_t[-1]: #预测数据的真实值大于目前数据，代表没有未来数据，仅需要预测。
+                print('最后一个月！',pre_t0)
+                res_to_df, suanfa_list = eval(algo)(train_data=pre_da0, res_to_df=res_to_df, yinzi=yinzi0,
+                                                    Train=False,last=True,n_jobs=n_jobs,pac_k = 40,q=q_n)
+            else:
+                # 预测
+                print('预测月分：',pre_t0)
+                res_to_df, suanfa_list = eval(algo)(train_data=pre_da0, res_to_df=res_to_df, yinzi=yinzi0,
+                                                    Train=False,last=False,n_jobs=n_jobs,pac_k = 40,q=q_n)
+            # print(res_to_df.keys())
+            for k,v in res_to_df.items():
+                if str(k).startswith('data')==False:continue
+
+                add_index = ['canshu','celue_name']+ [x for x in df_yinzi[pre_].keys() if str(x).startswith('市场_')]
+                add_index+= [x for x in pre_da0.keys() if str(x).startswith('para')]
+                add_index+= [x for x in pre_da0.keys() if str(x).startswith('clm')]
+
+                add_index+= ['end_3','max_sum_3','sharp_rate_3','max_back_3','win_rate_3','trade_nums_3']
+
+                print(add_index)
+
+                v = pd.merge(v,pre_da0[add_index],on=['canshu','celue_name'])
+                print(v.tail(3))
+                if pre_t0 > zong_t[-1]:
+                    print('跳出！')
+                    v['未来end_3'] = 0
+                    res_to_df[k] = v
+                    break
+
+                pre_df = df_yinzi[pre_pre][['canshu','celue_name','end_3','max_sum_3','sharp_rate_3','max_back_3','win_rate_3','trade_nums_3']]
+                li_ = ['end_3', 'max_sum_3', 'sharp_rate_3', 'max_back_3', 'win_rate_3', 'trade_nums_3']
+                newli_ = ['未来'+str(x) for x in li_]
+
+                pre_df.rename(columns=dict(zip(li_,newli_)),inplace =True)
+
+                res_to_df[k] = pd.merge(v,pre_df,on=['canshu','celue_name'])
+
+                print(res_to_df[k].tail(5))
+                # exit()
+            # res_to_df = pd.merge(res_to_df,pre_da0[['end_3','max_sum_3','sharp_rate_3','max_back_3','win_rate_3','trade_nums_3','win_mean_num_3','loss_mean_num_3']],left_on=['canshu','celue_name'])
+            df_zong[now_t0]= res_to_df
+            i =i+gd_zq
+        except Exception as e:
+            print(e)
+            print(traceback.format_exc())
+            i =i+1
+            continue
+    print(df_zong.keys())
+    time0 = time.strftime("%m-%d", time.localtime())
+
+    res_path += res_flag+time0+'.pickle'
+    with open(res_path,mode='wb') as f:
+        pickle.dump(df_zong,f)
+        print(f'逐月训练结果，已保存！to:\n{res_path}')
+
+    return res_path
+
+
+
 
 # 预测模式选择
-def pre_mode(train_path, res_path0, zong_t, res_flag=f'_pre_res12.pickle',zuhe_cal='train_and_predict2', algo='cal_zuhe3', mode=2, time_lidu=1,n_jobs=2):
+def pre_mode(train_path, res_path0, zong_t, res_flag=f'_pre_res12.pickle',zuhe_cal='train_and_predict2', algo='cal_zuhe3', mode=2,hc_zq=3, time_lidu=1,n_jobs=2):
+    hg_zq = 2
     with open(train_path, 'rb') as fe:
         train_res = pickle.load(fe)
+        print(f'训练数据包含策略：',list(train_res.keys()))
+
         # s_ftx
         if mode == 1:
             for k, v in train_res.items():
@@ -761,29 +906,56 @@ def pre_mode(train_path, res_path0, zong_t, res_flag=f'_pre_res12.pickle',zuhe_c
         # txjz
         if mode == 4:
             train_data = {} #按月份合并所有策略
-            print(list(train_res.keys()))
-            for i in train_res[list(train_res.keys())[0]].keys(): #遍历月份
-                if datetime.datetime.strptime(i,"%Y-%m-%d" )<(zong_t[0]+relativedelta(months=int(6))):continue
+            print(f'每个策略，包含月份：', sorted(train_res[list(train_res.keys())[0]].keys()))
+            for i in sorted(train_res[list(train_res.keys())[0]].keys()): #遍历月份
+                if datetime.datetime.strptime(i,"%Y-%m-%d" )<(zong_t[0]+relativedelta(months=int(hg_zq))):continue
                 df_ = pd.DataFrame()
+                # 每一个策略都添加历史的:hg_zq个
                 for k, v in train_res.items():
-
+                    # exit()
+                    # 遍历月份添加
                     if k.split('_')[-1] == str(time_lidu):
-                        df_ = df_.append(v[i], ignore_index=True)
-                # print(df_.tail())
+                        for y in range(hg_zq):
 
+                            add_y = datetime.datetime.strptime(i, "%Y-%m-%d") - relativedelta(months=int(y))
+                            add_y = add_y.strftime(format="%Y-%m-%d")
+                            df_ = df_.append(v[add_y], ignore_index=True)
+                            # print(add_y)
+                # print('运行月份：',i)
+                # #
+                # print(set(df_['celue_name'].tolist()))
+                # print((df_.shape))
+                # print(df_[df_['celue_name']=='ma_tp_03_1'].shape)
+                # print(set(df_[df_['celue_name']=='ma_tp_03_1']['res_time'].tolist()))
+                # exit()
                 train_data[i] = df_
+            # 贪心向前！，贪心算法要hgzq=0才可以
+            if hg_zq == 0:
+                print('贪心向前，hg_zq = 0')
+                train_data0 = {}
+                cum_df_ = pd.DataFrame()
+                for t,v in train_data.items():
+                    # print(t)
+                    cum_df_ = cum_df_.append(v, ignore_index=True)
+                    train_data0[t] = cum_df_
+            else:
+                train_data0 = train_data
+                print(f'贪心周期固定，hg_zq = {hg_zq}')
+
+            # print(f'传入训练数据日期:{train_data0.keys()}')
+            # print((train_data0['2020-09-01'].keys()))
+            #
+            # print(set(train_data0['2020-09-01']['res_time'].tolist()))
+            # print(train_data0['2020-09-01'].tail())
+            #
             # exit()
-            # print(set(train_data[i]['celuename'].to_list()))
-            # exit()
-            train_data0 = {}
-            cum_df_ = pd.DataFrame()
-            for t,v in train_data.items():
-                # print(t)
-                cum_df_ = cum_df_.append(v, ignore_index=True)
-                train_data0[t] = cum_df_
+            # print(train_data0['2020-08-01'].shape)
+            #
+            # print(train_data0['2020-09-01'].shape)
+            # print(set(train_data0['2020-09-01']['res_time'].tolist()))
 
             eval(zuhe_cal)(train_data=train_data0, res_path=res_path0, algo=algo, res_flag=f'\\tx\\贪心集中{algo}{res_flag}',
-                              zong_t=zong_t, hc_zq=6, gd_zq=1,n_jobs=n_jobs)
+                              zong_t=zong_t, hc_zq=hg_zq, gd_zq=1,n_jobs=n_jobs)
             time.sleep(5)
 
 def pre_mode_mulfile(train_paths:str, res_path0:str, zong_t:list,index_list=[], res_flag=f'.pickle', algo='cal_zuhe3', mode=2, time_lidu=1,n_jobs=2):
@@ -1026,7 +1198,25 @@ def analyze_res(res_paths,info = ''):
 
     print(df_zong)
 
+def clm_tezheng(train_data,to_col='celue_name',new_col = 'clm'):
 
+    clm = set(sorted(train_data[to_col].to_list()))
+    clm_dict= {}
+    for i, c in enumerate(clm):
+        clm_dict[c]={f'{new_col}{i}':1}
+    for ix, c in enumerate(clm_dict.keys()):
+        for i, c0 in enumerate(clm):
+            if f'{new_col}{i}' in clm_dict[c].keys():continue
+            else: clm_dict[c][f'{new_col}{i}'] = 0
+
+    for i in clm:
+        con = train_data[to_col] == i
+        # 同名策略名统一命名。
+        for m,v in clm_dict[i].items():
+            train_data.loc[con,m]=v
+
+    # print(clm_dict)
+    return train_data
 
 
 if __name__ == '__main__':
@@ -1034,31 +1224,43 @@ if __name__ == '__main__':
     from 机器学习函数 import *
     from 算法组合 import *
     from DB_in_out_strategies.查看_下载_strategies_res import show_local_data
-    # 单策略运行
-    zong_t = [dt.datetime(2019,6, 1), dt.datetime(2020, 6, 1)]
-    # show_local_data(r'F:\new_0811\huice_log\MEBD03_pre_res\tx\贪心集中cal_zuhe_gl_02_9_7_2.pickle',show=True)
+
+    sys.path.append(r"F:\task\恒生股指期货\KRData_master\KRData")
+    from KRData.HKData import HKMarket, HKFuture
+
+    #
+    #
+    # hf = HKFuture()  # 首次使用先配置..KRData
+    # data = hf.get_main_contract_bars('HSI', start='20200701', end='20200720')
+    # print(data.head())
+    # print(data.tail())
     # exit()
+    # 单策略运行
+    zong_t = [dt.datetime(2020,1, 1), dt.datetime(2020,8, 1)]
+    # show_local_data(r'F:\new_0811\huice_log\train_res\MEBD策略模型_03_训练数据_time0_1_6_new_09-07.pickle',show=True)
+    # exit()
+
     # 生成训练数据
-    if 1 == True:
+    if 0 == True:
         path_ = os.getcwd() + r'\huice_log' + '\MEBD03\dema_tp_03_2019-06-01_3T_8_18.csv'
         data_path = r'F:\new_0811\DB_in_out_strategies\res_df_in_dict_to03_09-09.pickle'
         train_path = r'F:\new_0811\huice_log\train_res\MEBD_03_训练数据.pkl'
         res_path0 = r'F:\new_0811\huice_log\MEBD03_pre_res'
         time_lidu = 1
         zong_t = [dt.datetime(2019, 4, 1), dt.datetime(2020, 8, 1)]
-        pack_to_traindatas(data_path, train_path, zong_t,time_lidu=1, watch_data=False)
+        # pack_to_traindatas(data_path, train_path, zong_t,time_lidu=1, watch_data=False)
     # 进行算法学习
-    if 0 ==True:
+    if 1 ==True:
         res_path0 = r'F:\new_0811\huice_log\MEBD03_pre_res'
 
-        train_paths = [r'F:\new_0811\huice_log\train_res\MEBD策略模型_03_训练数据_time0_1_6_new_09-07.pickle',
+        train_paths = [r'F:\new_0811\huice_log\train_res\MEBD_04_yy训练数据time0_1_3_new_09-16.pickle',
                        # r'F:\new_0811\huice_log\train_res\MEBD02_time1_traindatas_特征.pkl',
                        # r'F:\new_0811\huice_log\train_res\MEBD03_time1_traindatas_特征.pkl',
         #
                        ]
         # pre_mode_mulfile(train_paths, res_path0, zong_t,index_list=['_ma_','_wma_','_T3_'], res_flag=f'_9_3.pickle', algo='cal_zuhe_gl_01', mode=1, time_lidu=1,n_jobs =2)
         for train_path in train_paths:
-            pre_mode(train_path, res_path0, zong_t, res_flag = f'_9_8_2_test.pickle',zuhe_cal='train_and_predict3', algo='cal_zuhe_gl_02', mode=4, time_lidu=1)
+            pre_mode(train_path, res_path0, zong_t, res_flag = f'mebd04_训练结果10_',zuhe_cal='train_and_predict4', algo='zuhe_911_02', mode = 4,hc_zq=0, time_lidu=1)
 
 
 

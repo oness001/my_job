@@ -64,7 +64,7 @@ def plot_3d(data):
     for i, z0 in enumerate(set(data['s_Time'].tolist())):
         print(i,z0)
 
-        ax.scatter(xs=0, ys=data[data['s_Time']==z0]['预测周期真实收益'], zs=data[data['s_Time']==z0]['end_预测值'], c=color_list[i], s=30, alpha=1, label='', marker=flag[i])
+        ax.scatter(xs=0, ys=data[data['s_Time']==z0]['预测周期真实收益'], zs=data[data['s_Time']==z0]['预测值'], c=color_list[i], s=30, alpha=1, label='', marker=flag[i])
 
     ax.set_xticklabels(list(set(data['s_Time'].tolist())), fontsize=10)
     ax.set_yticklabels([" ", " ", "predict_price", " ", " "], fontsize=10)
@@ -84,7 +84,7 @@ def echart_plot_3d(data):
 
     print(data.tail())
 
-    df = data[['s_Time', '预测周期真实收益' ,'end_预测值' ]].values.tolist()
+    df = data[['s_Time', '预测周期真实收益' ,'预测值' ]].values.tolist()
 
 
 
@@ -107,10 +107,17 @@ def dong_scatter(data,info='',path0=''):
     from pyecharts import options as opts
     from pyecharts.commons.utils import JsCode
     from pyecharts.charts import Scatter, Timeline
-    print(data.columns)
+    # print(data.columns)
     title = data.iloc[-1]['策略']
-    df = data[['s_Time', '预测周期真实收益' ,'end_预测值' ]]
+
+    df = data
+    data['测试集_真实分类'] = data['测试集_真实分类'].apply(lambda x: int(x))
+    print(data['测试集_真实分类'].values)
+    min_pre = min(data['测试集_真实分类'].values.tolist())
+    max_pre = max(data['测试集_真实分类'].values.tolist())
     df['预测周期真实收益']=df['预测周期真实收益'].apply(lambda x: int(x))
+    df['预测值']=df['预测值'].apply(lambda x: int(x))
+
     df['s_Time'] = pd.to_datetime(df['s_Time'])#.apply(lambda x:x.strftime(format="%Y-%m-%d"))
     df.sort_values(by=['s_Time'], ascending=True, inplace=True)
     tl = Timeline()
@@ -120,24 +127,27 @@ def dong_scatter(data,info='',path0=''):
     print(df_date)
 
     for k,i in enumerate(df_date):
-        print(k,i)
-        xdata = df.loc[df['s_Time'] == i, 'end_预测值'].values.tolist()
-        ydata = df.loc[df['s_Time']==i,['预测周期真实收益','end_预测值']].values.tolist()
+        # print(k,i)
+        xdata = df.loc[df['s_Time'] == i, '预测值'].values.tolist()
+        ydata = df.loc[df['s_Time']==i,['预测周期真实收益','预测值']].values.tolist()
         # print(ydata)
         Scatter0 = (
             Scatter()
             .add_xaxis(xdata)
-            .add_yaxis('预测周期真实收益',ydata)
+            .add_yaxis('预测周期真实收益',ydata,label_opts = opts.LabelOpts(is_show=False))
             .set_series_opts()
+
             .set_global_opts(
                 xaxis_opts=opts.AxisOpts(name = '预测值：',type_="value",axistick_opts=opts.AxisTickOpts(is_show=True)),
                 yaxis_opts=opts.AxisOpts(name = '真实值：',type_="value",axistick_opts=opts.AxisTickOpts(is_show=True)),
                 title_opts =opts.TitleOpts(title=f"{title}==:{i}月份的数据"),
-                tooltip_opts = opts.TooltipOpts(formatter=JsCode("function (params) { params.value[1];}")),
-                visualmap_opts=opts.VisualMapOpts(max_= 50000),
+
+                tooltip_opts = opts.TooltipOpts(formatter=JsCode("function (params) { return '真实：'+params.value[1] +' == 预测：'+ params.value[2];}")),
+                visualmap_opts=opts.VisualMapOpts(min_=min_pre,max_= max_pre),
                 ))
         tl.add(Scatter0, "{}月".format(i))
-    tl.render(path0+f"{title}_{info}.html")
+    tl.render(path0+f"{info}.html")
+    print(path0+f"{info}.html")
 
 def corr_plot(data:list):
     from pyecharts import options as opts
